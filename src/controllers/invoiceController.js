@@ -20,7 +20,7 @@ export async function list(req, res) {
   const search = (getQueryParam(req.query, 'search', '') || '').toLowerCase().trim();
   const statusFilter = getQueryParam(req.query, 'status', '');
 
-  let invoices = Invoice.findAll();
+  let invoices = await Invoice.findAll();
 
   if (search) {
     invoices = invoices.filter((inv) =>
@@ -52,7 +52,7 @@ export async function list(req, res) {
 }
 
 export async function getById(req, res) {
-  const invoice = Invoice.findById(req.params.id);
+  const invoice = await Invoice.findById(req.params.id);
   if (!invoice) {
     return res.status(404).json({ error: 'Invoice not found' });
   }
@@ -71,10 +71,10 @@ export async function create(req, res) {
   if (!customerName || amount == null) {
     return res.status(400).json({ error: 'Customer name and amount are required' });
   }
-  const count = Invoice.count();
+  const count = await Invoice.count();
   const invoiceNumber = `INV-${String(count + 1).padStart(5, '0')}`;
   const now = dayjs().valueOf();
-  const invoice = Invoice.create({
+  const invoice = await Invoice.create({
     invoiceNumber,
     customerName: String(customerName).trim(),
     amount: Number(amount),
@@ -92,7 +92,7 @@ export async function create(req, res) {
 }
 
 export async function update(req, res) {
-  const invoice = Invoice.findById(req.params.id);
+  const invoice = await Invoice.findById(req.params.id);
   if (!invoice) {
     return res.status(404).json({ error: 'Invoice not found' });
   }
@@ -113,7 +113,7 @@ export async function update(req, res) {
     }
     updates.status = newStatus;
   }
-  const updated = Invoice.update(req.params.id, updates);
+  const updated = await Invoice.update(req.params.id, updates);
   res.json({
     id: updated.id,
     invoiceNumber: updated.invoiceNumber,
@@ -125,10 +125,10 @@ export async function update(req, res) {
 }
 
 export async function remove(req, res) {
-  const invoice = Invoice.findById(req.params.id);
+  const invoice = await Invoice.findById(req.params.id);
   if (!invoice) {
     return res.status(404).json({ error: 'Invoice not found' });
   }
-  Invoice.remove(req.params.id);
+  await Invoice.remove(req.params.id);
   res.status(204).send();
 }

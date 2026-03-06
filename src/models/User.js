@@ -1,18 +1,21 @@
-import { db } from '../config/database.js';
+import { sql } from '../config/database.js';
 import { randomUUID } from 'crypto';
 
-export function findByEmail(email) {
-  return db.prepare('SELECT * FROM users WHERE email = ?').get(email);
+export async function findByEmail(email) {
+  const { rows } = await sql`SELECT * FROM users WHERE email = ${email}`;
+  return rows[0] ?? null;
 }
 
-export function findById(id) {
-  return db.prepare('SELECT * FROM users WHERE id = ?').get(id);
+export async function findById(id) {
+  const { rows } = await sql`SELECT * FROM users WHERE id = ${id}`;
+  return rows[0] ?? null;
 }
 
-export function create({ email, passwordHashed, role = 'Viewer', createdAt }) {
+export async function create({ email, passwordHashed, role = 'Viewer', createdAt }) {
   const id = randomUUID();
-  db.prepare(
-    'INSERT INTO users (id, email, passwordHashed, role, createdAt) VALUES (?, ?, ?, ?, ?)'
-  ).run(id, email, passwordHashed, role, createdAt);
-  return findById(id);
+  await sql`
+    INSERT INTO users (id, email, "passwordHashed", role, "createdAt")
+    VALUES (${id}, ${email}, ${passwordHashed}, ${role}, ${createdAt})
+  `;
+  return await findById(id);
 }

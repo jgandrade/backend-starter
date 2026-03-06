@@ -40,12 +40,12 @@ export async function signup(req, res) {
   if (!emailRegex.test(email)) {
     return res.status(400).json({ error: 'Invalid email format' });
   }
-  if (User.findByEmail(email)) {
+  if (await User.findByEmail(email)) {
     return res.status(409).json({ error: 'Email already exists' });
   }
   const passwordHashed = bcrypt.hashSync(password, 8);
   const now = dayjs().valueOf();
-  const user = User.create({ email, passwordHashed, role, createdAt: now });
+  const user = await User.create({ email, passwordHashed, role, createdAt: now });
   const jwtPayload = toJwtPayload(user);
   const [accessToken, refreshToken] = await Promise.all([
     signAccessToken(jwtPayload),
@@ -60,7 +60,7 @@ export async function login(req, res) {
   if (!email || !password) {
     return res.status(400).json({ error: 'Email and password are required' });
   }
-  const user = User.findByEmail(email);
+  const user = await User.findByEmail(email);
   if (!user || !bcrypt.compareSync(password, user.passwordHashed)) {
     return res.status(401).json({ error: 'Invalid email or password' });
   }
@@ -80,7 +80,7 @@ export async function refresh(req, res) {
   }
   try {
     const payload = await verify(refreshToken);
-    const user = User.findById(payload.id);
+    const user = await User.findById(payload.id);
     if (!user) {
       return res.status(401).json({ error: 'User not found' });
     }
@@ -97,7 +97,7 @@ export async function refresh(req, res) {
 }
 
 export async function me(req, res) {
-  const user = User.findById(req.auth.id);
+  const user = await User.findById(req.auth.id);
   if (!user) {
     return res.status(404).json({ error: 'User not found' });
   }
