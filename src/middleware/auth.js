@@ -42,7 +42,7 @@ export function requireRole(roles, options = {}) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
     const { findById } = await import('../models/User.js');
-    const user = findById(req.auth.id);
+    const user = await findById(req.auth.id);
     if (!user || !roleList.includes(user.role)) {
       return res.status(403).json({ error: message });
     }

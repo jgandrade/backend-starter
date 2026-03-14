@@ -15,8 +15,8 @@ function getQueryParam(params, key, fallback) {
 }
 
 export async function list(req, res) {
-  const page = Math.max(1, parseInt(getQueryParam(req.query, 'page', '1'), 10));
-  const limit = Math.min(50, Math.max(1, parseInt(getQueryParam(req.query, 'limit', '10'), 10)));
+  const page = Math.max(1, parseInt(getQueryParam(req.query, 'page', '1'), 10) || 1);
+  const limit = Math.min(50, Math.max(1, parseInt(getQueryParam(req.query, 'limit', '10'), 10) || 10));
   const search = (getQueryParam(req.query, 'search', '') || '').toLowerCase().trim();
   const statusFilter = getQueryParam(req.query, 'status', '');
 
@@ -71,6 +71,9 @@ export async function create(req, res) {
   if (!customerName || amount == null) {
     return res.status(400).json({ error: 'Customer name and amount are required' });
   }
+  if (isNaN(Number(amount))) {
+    return res.status(400).json({ error: 'Amount must be a number' });
+  }
   const count = await Invoice.count();
   const invoiceNumber = `INV-${String(count + 1).padStart(5, '0')}`;
   const now = dayjs().valueOf();
@@ -99,7 +102,11 @@ export async function update(req, res) {
   const body = req.body ?? {};
   const updates = {};
   if (body.customerName != null) updates.customerName = String(body.customerName).trim();
-  if (body.amount != null) updates.amount = Number(body.amount);
+  if (body.amount != null) {
+    const amt = Number(body.amount);
+    if (isNaN(amt)) return res.status(400).json({ error: 'Amount must be a number' });
+    updates.amount = amt;
+  }
   if (body.status != null) {
     const newStatus = body.status;
     if (!VALID_STATUSES.includes(newStatus)) {

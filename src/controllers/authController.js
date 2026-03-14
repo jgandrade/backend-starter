@@ -10,7 +10,7 @@ const COOKIE_MAX_AGE = 60 * 60 * 24 * 7; // 7 days
 
 function authResponseHeaders(refreshToken) {
   return {
-    'Set-Cookie': `${REFRESH_COOKIE}=${refreshToken}; HttpOnly; Path=/api; SameSite=Strict; Max-Age=${COOKIE_MAX_AGE}`,
+    'Set-Cookie': `${REFRESH_COOKIE}=${refreshToken}; HttpOnly; Path=/api; SameSite=None; Secure; Max-Age=${COOKIE_MAX_AGE}`,
   };
 }
 
@@ -28,8 +28,13 @@ function toJwtPayload(user) {
   return { id: user.id, email: user.email };
 }
 
+const VALID_ROLES = ['Viewer', 'Accountant', 'Admin'];
+
 export async function signup(req, res) {
   const { email, password, role = 'Viewer' } = req.body ?? {};
+  if (!VALID_ROLES.includes(role)) {
+    return res.status(400).json({ error: 'Invalid role' });
+  }
   if (!email || !password) {
     return res.status(400).json({ error: 'Email and password are required' });
   }
